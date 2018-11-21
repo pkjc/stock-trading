@@ -13,7 +13,7 @@ public class GrowthViewActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_growth_view);
 
-        webView = findViewById(R.id. webView);
+        webView = findViewById(R.id.webView);
 
         webView.loadUrl("file:///android_asset/index.html");
         webView.getSettings().setJavaScriptEnabled(true);

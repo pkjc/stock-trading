@@ -1,6 +1,7 @@
 package edu.oakland.stocktrading;
 
 import android.content.Intent;
+import android.icu.util.CurrencyAmount;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -8,6 +9,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.text.NumberFormat;
+import java.util.HashMap;
+import java.util.Locale;
 import java.util.Random;
 
 // start button click starts 2 threads and go to next screen
@@ -20,7 +24,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     TextView accountBal;
     Button startBtn, stopBtn, showGraph;
-
+    HashMap<Integer, Double> dataMap = new HashMap<Integer, Double>();
+    Double initBalance = 100.00;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,14 +33,17 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         accountBal = findViewById(R.id.balance);
+        NumberFormat format = NumberFormat.getCurrencyInstance(Locale.US);
 
+        accountBal.setText(format.format(initBalance));
         startBtn = findViewById(R.id.startGame);
+
         startBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                BadStrategy badStrategy = new BadStrategy(0.0);
+                BadStrategy badStrategy = new BadStrategy(Double.valueOf(initBalance));
                 badStrategy.start();
-                GoodStrategy goodStrategy = new GoodStrategy(0.0);
+                GoodStrategy goodStrategy = new GoodStrategy(Double.valueOf(initBalance));
                 goodStrategy.start();
             }
         });
@@ -74,7 +82,7 @@ class GoodStrategy extends Thread{
         Log.d(TAG, "GOOD STRATEGY THREAD RUNNING ----------------------------------------------------------------");
         try {
             for (int i=0;i<=10;i++){
-                Log.d(TAG, "run: " + i);
+                Log.d(TAG, "run: " + i+"gain:"+gain+"balance:"+accountBal);
                 Thread.sleep(1000);
             }
         } catch (InterruptedException e) {
@@ -86,8 +94,9 @@ class GoodStrategy extends Thread{
         Random random = new Random();
         random.nextDouble();
         double randomNum = Math.random();
-
-        return 0.0;
+        //positive gain
+        gain = 100 * randomNum;
+        return gain;
     }
 }
 
@@ -104,8 +113,9 @@ class BadStrategy extends Thread{
         Random random = new Random();
         random.nextDouble();
         double randomNum = Math.random();
-
-        return 0.0;
+        //negative gain
+        gain = - (100 * randomNum);
+        return gain;
     }
     @Override
     public void run() {
@@ -114,7 +124,7 @@ class BadStrategy extends Thread{
         try {
 
             for (int i=0;i<=10;i++){
-                Log.d(TAG, "run: " + i);
+                Log.d(TAG, "run: " + i+"gain:" + gain +"balance:"+ accountBal);
                 Thread.sleep(1000);
             }
         } catch (InterruptedException e) {
