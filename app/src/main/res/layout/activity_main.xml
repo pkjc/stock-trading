@@ -13,7 +13,6 @@
         android:layout_marginLeft="16dp"
         android:layout_marginTop="204dp"
         android:layout_marginRight="16dp"
-        android:text="$100"
         android:textAlignment="center"
         android:textAppearance="@android:style/TextAppearance.Material.Display2"
         android:textSize="60sp"

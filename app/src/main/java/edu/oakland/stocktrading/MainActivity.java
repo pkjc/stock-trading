@@ -11,7 +11,9 @@ import android.widget.Toast;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -41,11 +43,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         accountBalTextView = findViewById(R.id.balance);
         gameMsg = findViewById(R.id.gameMsg);
-
         startBtn = findViewById(R.id.startGame);
+
         startBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -74,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(MainActivity.this, GrowthViewActivity.class);
                 Bundle args = new Bundle();
                 args.putSerializable("accountBalVals", (Serializable) accountBalVals);
-                intent.putExtra("BUNDLE",args);
+                intent.putExtra("BUNDLE", args);
                 view.getContext().startActivity(intent);
             }
         });
@@ -84,14 +85,15 @@ public class MainActivity extends AppCompatActivity {
 
 class PollAccountBal extends TimerTask {
     private static final String TAG = "PollAccountBal";
+
     public void run() {
-        Log.d(TAG,  " <<<<< ACCOUNT BALANACE >>>>>> " + accountBal);
+        Log.d(TAG, " <<<<< ACCOUNT BALANACE >>>>>> " + accountBal);
         accountBalVals.add(accountBal);
         time = time + 10;
     }
 }
 
-class GoodStrategy extends Thread{
+class GoodStrategy extends Thread {
     private static final String TAG = "GoodStrategy";
     private final AtomicBoolean running = new AtomicBoolean(false);
 
@@ -104,7 +106,7 @@ class GoodStrategy extends Thread{
         running.set(true);
         Log.d(TAG, "GOOD STRATEGY THREAD RUNNING ----------------------------------------------------------------\n");
         try {
-            while (accountBal > 0 && running.get()){
+            while (accountBal > 0 && running.get()) {
                 Log.d(TAG, "IN good strategy BEFORE : " + accountBal + "\n\n");
                 Thread.sleep(1000);
                 accountBal = accountBal + Math.random() * 1.6;
@@ -114,12 +116,13 @@ class GoodStrategy extends Thread{
             e.printStackTrace();
         }
     }
-    double roundOff(double value){
-        return Math.round(value * 100)/100;
+
+    double roundOff(double value) {
+        return Math.round(value * 100) / 100;
     }
 }
 
-class BadStrategy extends Thread{
+class BadStrategy extends Thread {
     private static final String TAG = "BadStrategy";
     private final AtomicBoolean running = new AtomicBoolean(false);
 
@@ -132,7 +135,7 @@ class BadStrategy extends Thread{
         running.set(true);
         Log.d(TAG, "BAD STRATEGY THREAD RUNNING ----------------------------------------------------------------\n");
         try {
-            while (accountBal > 0 && running.get()){
+            while (accountBal > 0 && running.get()) {
                 Log.d(TAG, "IN BAD strategy BEFORE : " + accountBal + "\n\n");
                 Thread.sleep(1000);
                 accountBal = accountBal - Math.random() * 1.5;
@@ -142,7 +145,8 @@ class BadStrategy extends Thread{
             e.printStackTrace();
         }
     }
-    double roundOff(double value){
-        return Math.round(value * 100)/100;
+
+    double roundOff(double value) {
+        return Math.round(value * 100) / 100;
     }
 }
