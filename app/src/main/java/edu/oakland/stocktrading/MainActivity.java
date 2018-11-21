@@ -107,7 +107,7 @@ class GoodStrategy extends Thread{
             while (accountBal > 0 && running.get()){
                 Log.d(TAG, "IN good strategy BEFORE : " + accountBal + "\n\n");
                 Thread.sleep(1000);
-                accountBal = accountBal + Math.random();
+                accountBal = accountBal + Math.random() * 1.6;
                 Log.d(TAG, "IN good strategy AFTER : " + accountBal + "\n\n");
             }
         } catch (InterruptedException e) {
@@ -135,7 +135,7 @@ class BadStrategy extends Thread{
             while (accountBal > 0 && running.get()){
                 Log.d(TAG, "IN BAD strategy BEFORE : " + accountBal + "\n\n");
                 Thread.sleep(1000);
-                accountBal = accountBal - Math.random();
+                accountBal = accountBal - Math.random() * 1.5;
                 Log.d(TAG, "IN BAD strategy AFTER : " + accountBal + "\n\n");
             }
         } catch (InterruptedException e) {
