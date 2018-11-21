@@ -7,22 +7,17 @@
     google.charts.load('current', {'packages':['corechart']});
     google.charts.setOnLoadCallback(drawChart);
     var data_array = [
-    ['Time', 'Gain'],
-    ['10', 80],
-    ['20', 90],
-    ['30', 50],
-    ['40', 60]
+        ['Gain', 'Time'],
+        ['0', 100]
     ];
 
-    function addTimeGain(time, gain)
-    {
+    function addTimeGain(time, gain){
         var d = [[time, parseInt(gain)]];
         data_array.push.apply(data_array, d);
         drawChart();
     }
 
-    function drawChart()
-    {
+    function drawChart(){
         var data = google.visualization.arrayToDataTable(data_array);
         var options = {
             title: 'Stock Trading',
@@ -33,8 +28,7 @@
         chart.draw(data, options);
     }
 
-    function ShowToast()
-    {
+    function ShowToast(){
         Android.ShowToast();
     }
     </script>
@@ -42,8 +36,8 @@
 </head>
 
 <body>
-<input type="button" onClick="ShowToast()" value="Linear Graph"/>
-<div id="curve_chart" style="width: 90%; height: 90%"></div>
+<!--<input type="button" onClick="ShowToast()" value="Linear Graph"/-->
+<div id="curve_chart" style="margin-top:50px;width: 100%; height: auto"></div>
 </body>
 
 </html>

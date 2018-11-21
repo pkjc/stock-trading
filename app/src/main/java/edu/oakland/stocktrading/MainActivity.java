@@ -7,8 +7,18 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import java.util.Random;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static edu.oakland.stocktrading.GrowthViewActivity.time;
+import static edu.oakland.stocktrading.MainActivity.accountBal;
+import static edu.oakland.stocktrading.MainActivity.accountBalVals;
 
 // start button click starts 2 threads and go to next screen
 // good strategy thread and bad strategy thread
@@ -18,25 +28,32 @@ import java.util.Random;
 // if stop game button is clicked stop the game
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
-    TextView accountBal;
+    TextView accountBalTextView;
+    TextView gameMsg;
     Button startBtn, stopBtn, showGraph;
-
+    static volatile double accountBal = 100.0;
+    GoodStrategy goodStrategy = new GoodStrategy();
+    BadStrategy badStrategy = new BadStrategy();
+    static List<Double> accountBalVals = new ArrayList<>();
+    Timer timer = new Timer();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        accountBal = findViewById(R.id.balance);
+        accountBalTextView = findViewById(R.id.balance);
+        gameMsg = findViewById(R.id.gameMsg);
 
         startBtn = findViewById(R.id.startGame);
         startBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                BadStrategy badStrategy = new BadStrategy(0.0);
-                badStrategy.start();
-                GoodStrategy goodStrategy = new GoodStrategy(0.0);
                 goodStrategy.start();
+                badStrategy.start();
+                timer.schedule(new PollAccountBal(), 0, 10000);
+                Toast.makeText(MainActivity.this, "Game Started!", Toast.LENGTH_LONG).show();
+                gameMsg.setText("Click on 'Show Growth' to see the graph");
             }
         });
 
@@ -44,7 +61,9 @@ public class MainActivity extends AppCompatActivity {
         stopBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                goodStrategy.stopThread();
+                badStrategy.stopThread();
+                timer.purge();
             }
         });
 
@@ -53,72 +72,77 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, GrowthViewActivity.class);
+                Bundle args = new Bundle();
+                args.putSerializable("accountBalVals", (Serializable) accountBalVals);
+                intent.putExtra("BUNDLE",args);
                 view.getContext().startActivity(intent);
             }
         });
+
+    }
+}
+
+class PollAccountBal extends TimerTask {
+    private static final String TAG = "PollAccountBal";
+    public void run() {
+        Log.d(TAG,  " <<<<< ACCOUNT BALANACE >>>>>> " + accountBal);
+        accountBalVals.add(accountBal);
+        time = time + 10;
     }
 }
 
 class GoodStrategy extends Thread{
     private static final String TAG = "GoodStrategy";
-    double accountBal;
-    double gain;
+    private final AtomicBoolean running = new AtomicBoolean(false);
 
-    public GoodStrategy(double accountBal) {
-        this.accountBal = accountBal;
+    public void stopThread() {
+        running.set(false);
     }
 
     @Override
     public void run() {
-        accountBal = accountBal + calculateGain();
-        Log.d(TAG, "GOOD STRATEGY THREAD RUNNING ----------------------------------------------------------------");
+        running.set(true);
+        Log.d(TAG, "GOOD STRATEGY THREAD RUNNING ----------------------------------------------------------------\n");
         try {
-            for (int i=0;i<=10;i++){
-                Log.d(TAG, "run: " + i);
+            while (accountBal > 0 && running.get()){
+                Log.d(TAG, "IN good strategy BEFORE : " + accountBal + "\n\n");
                 Thread.sleep(1000);
+                accountBal = accountBal + Math.random();
+                Log.d(TAG, "IN good strategy AFTER : " + accountBal + "\n\n");
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
-
-    private double calculateGain() {
-        Random random = new Random();
-        random.nextDouble();
-        double randomNum = Math.random();
-
-        return 0.0;
+    double roundOff(double value){
+        return Math.round(value * 100)/100;
     }
 }
 
 class BadStrategy extends Thread{
     private static final String TAG = "BadStrategy";
-    double accountBal;
-    double gain;
+    private final AtomicBoolean running = new AtomicBoolean(false);
 
-    public BadStrategy(double accountBal) {
-        this.accountBal = accountBal;
+    public void stopThread() {
+        running.set(false);
     }
 
-    private double calculateGain() {
-        Random random = new Random();
-        random.nextDouble();
-        double randomNum = Math.random();
-
-        return 0.0;
-    }
     @Override
     public void run() {
-        accountBal = accountBal + calculateGain();
-        Log.d(TAG, "BAD STRATEGY THREAD RUNNING ----------------------------------------------------------------");
+        running.set(true);
+        Log.d(TAG, "BAD STRATEGY THREAD RUNNING ----------------------------------------------------------------\n");
         try {
-
-            for (int i=0;i<=10;i++){
-                Log.d(TAG, "run: " + i);
+            while (accountBal > 0 && running.get()){
+                Log.d(TAG, "IN BAD strategy BEFORE : " + accountBal + "\n\n");
                 Thread.sleep(1000);
+                accountBal = accountBal - Math.random();
+                Log.d(TAG, "IN BAD strategy AFTER : " + accountBal + "\n\n");
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+    double roundOff(double value){
+        return Math.round(value * 100)/100;
     }
 }
