@@ -128,7 +128,9 @@ class PollAccountBal extends TimerTask {
     }
 
     public void run() {
-        Toast.makeText(new MainActivity(), "Account Balance reached zero!", Toast.LENGTH_SHORT).show();
+        if(accountBal < 0) {
+            Toast.makeText(new MainActivity(), "Account Balance reached zero!", Toast.LENGTH_SHORT).show();
+        }
         Log.d(TAG, " <<<<< ACCOUNT BALANACE >>>>>> " + accountBal);
         accountBalVals.add(accountBal);
         time = time + 10;
