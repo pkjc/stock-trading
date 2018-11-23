@@ -62,20 +62,17 @@ public class MainActivity extends AppCompatActivity {
         startBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 //Reset the account balance to 100
-                accountBal = 100.0;
                 accountBalVals.clear();
+                accountBal = 100.0;
 
                 goodStrategy = new GoodStrategy();
                 goodStrategy.start();
                 badStrategy = new BadStrategy();
                 badStrategy.start();
 
-                if(accountBal < 0){
-                    timer.cancel();
-                }else {
-                    timer.schedule(new PollAccountBal(mainActivityHandler), 10000, 10000);
-                }
+                timer.schedule(new PollAccountBal(mainActivityHandler), 10000, 10000);
 
                 Toast.makeText(MainActivity.this, "Game Started!", Toast.LENGTH_LONG).show();
                 gameMsg.setText("Click on 'Show Growth' to see the graph");
@@ -118,12 +115,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         Intent intent = getIntent();
         //Poll again
-        if(accountBal < 0){
-            timer.cancel();
-        }else {
-            timer.schedule(new PollAccountBal(mainActivityHandler), 10000, 10000);
-        }
-
+        timer.schedule(new PollAccountBal(mainActivityHandler), 10000, 10000);
     }
 }
 
@@ -136,10 +128,11 @@ class PollAccountBal extends TimerTask {
     }
 
     public void run() {
+        Toast.makeText(new MainActivity(), "Account Balance reached zero!", Toast.LENGTH_SHORT).show();
         Log.d(TAG, " <<<<< ACCOUNT BALANACE >>>>>> " + accountBal);
         accountBalVals.add(accountBal);
         time = time + 10;
-        Message msg =activityHandler.obtainMessage();
+        Message msg = activityHandler.obtainMessage();
         Bundle bundle = msg.getData();
        //bundle.putSerializable("AccountValueList", (Serializable) accountBalVals);
         bundle.putDouble("Time", time);
