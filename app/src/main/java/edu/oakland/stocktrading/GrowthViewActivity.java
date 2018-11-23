@@ -4,8 +4,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
 
 import java.util.ArrayList;
 import java.util.Timer;
@@ -19,11 +21,23 @@ public class GrowthViewActivity extends AppCompatActivity {
     Timer timer = new Timer();
     static int time = 10;
     static boolean isWebViewLoaded = false;
+    Button graphStopBtn, goBack = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_growth_view);
+        graphStopBtn = findViewById(R.id.graphStopBtn);
+        goBack = findViewById(R.id.goBack);
+
+        goBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(GrowthViewActivity.this, MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                startActivity(intent);
+            }
+        });
 
         Intent intent = getIntent();
         Bundle args = intent.getBundleExtra("BUNDLE");

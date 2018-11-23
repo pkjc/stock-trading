@@ -34,8 +34,8 @@ public class MainActivity extends AppCompatActivity {
     TextView gameMsg;
     Button startBtn, stopBtn, showGraph;
     static volatile double accountBal = 100.0;
-    GoodStrategy goodStrategy = new GoodStrategy();
-    BadStrategy badStrategy = new BadStrategy();
+    GoodStrategy goodStrategy = null;
+    BadStrategy badStrategy = null;
     static List<Double> accountBalVals = new ArrayList<>();
     Timer timer = new Timer();
 
@@ -50,7 +50,13 @@ public class MainActivity extends AppCompatActivity {
         startBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                //Reset the account balance to 100
+                accountBal = 100.0;
+                accountBalVals.clear();
+
+                goodStrategy = new GoodStrategy();
                 goodStrategy.start();
+                badStrategy = new BadStrategy();
                 badStrategy.start();
                 timer.schedule(new PollAccountBal(), 0, 10000);
                 Toast.makeText(MainActivity.this, "Game Started!", Toast.LENGTH_LONG).show();
@@ -62,8 +68,12 @@ public class MainActivity extends AppCompatActivity {
         stopBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                goodStrategy.stopThread();
-                badStrategy.stopThread();
+                if(goodStrategy != null)
+                    goodStrategy.stopThread();
+                goodStrategy = null;
+                if(badStrategy != null)
+                    badStrategy.stopThread();
+                badStrategy = null;
                 timer.purge();
             }
         });
@@ -109,7 +119,7 @@ class GoodStrategy extends Thread {
             while (accountBal > 0 && running.get()) {
                 Log.d(TAG, "IN good strategy BEFORE : " + accountBal + "\n\n");
                 Thread.sleep(1000);
-                accountBal = accountBal + Math.random() * 1.6;
+                accountBal = accountBal + Math.random() * 100;
                 Log.d(TAG, "IN good strategy AFTER : " + accountBal + "\n\n");
             }
         } catch (InterruptedException e) {
@@ -117,9 +127,9 @@ class GoodStrategy extends Thread {
         }
     }
 
-    double roundOff(double value) {
+    /*double roundOff(double value) {
         return Math.round(value * 100) / 100;
-    }
+    }*/
 }
 
 class BadStrategy extends Thread {
@@ -138,7 +148,7 @@ class BadStrategy extends Thread {
             while (accountBal > 0 && running.get()) {
                 Log.d(TAG, "IN BAD strategy BEFORE : " + accountBal + "\n\n");
                 Thread.sleep(1000);
-                accountBal = accountBal - Math.random() * 1.5;
+                accountBal = accountBal - Math.random() * 100;
                 Log.d(TAG, "IN BAD strategy AFTER : " + accountBal + "\n\n");
             }
         } catch (InterruptedException e) {
@@ -146,7 +156,7 @@ class BadStrategy extends Thread {
         }
     }
 
-    double roundOff(double value) {
+    /*double roundOff(double value) {
         return Math.round(value * 100) / 100;
-    }
+    }*/
 }
