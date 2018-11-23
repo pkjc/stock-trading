@@ -13,9 +13,7 @@ import android.widget.Toast;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -72,7 +70,13 @@ public class MainActivity extends AppCompatActivity {
                 goodStrategy.start();
                 badStrategy = new BadStrategy();
                 badStrategy.start();
-                timer.schedule(new PollAccountBal(mainActivityHandler), 0, 10000);
+
+                if(accountBal < 0){
+                    timer.cancel();
+                }else {
+                    timer.schedule(new PollAccountBal(mainActivityHandler), 10000, 10000);
+                }
+
                 Toast.makeText(MainActivity.this, "Game Started!", Toast.LENGTH_LONG).show();
                 gameMsg.setText("Click on 'Show Growth' to see the graph");
             }
@@ -82,13 +86,15 @@ public class MainActivity extends AppCompatActivity {
         stopBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(goodStrategy != null)
+                if(goodStrategy != null) {
                     goodStrategy.stopThread();
+                }
                 goodStrategy = null;
-                if(badStrategy != null)
+                if(badStrategy != null) {
                     badStrategy.stopThread();
+                }
                 badStrategy = null;
-                timer.purge();
+                timer.cancel();
             }
         });
 
@@ -112,7 +118,12 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         Intent intent = getIntent();
         //Poll again
-        timer.schedule(new PollAccountBal(mainActivityHandler), 0, 10000);
+        if(accountBal < 0){
+            timer.cancel();
+        }else {
+            timer.schedule(new PollAccountBal(mainActivityHandler), 10000, 10000);
+        }
+
     }
 }
 
@@ -130,7 +141,7 @@ class PollAccountBal extends TimerTask {
         time = time + 10;
         Message msg =activityHandler.obtainMessage();
         Bundle bundle = msg.getData();
-       // bundle.putSerializable("AccountValueList", (Serializable) accountBalVals);
+       //bundle.putSerializable("AccountValueList", (Serializable) accountBalVals);
         bundle.putDouble("Time", time);
         bundle.putDouble("Gain", accountBal);
         msg.setData(bundle);
