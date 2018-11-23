@@ -2,6 +2,8 @@ package edu.oakland.stocktrading;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -22,6 +24,9 @@ public class GrowthViewActivity extends AppCompatActivity {
     static int time = 10;
     static boolean isWebViewLoaded = false;
     Button graphStopBtn, goBack = null;
+    Handler growthActivityHandler = null;
+    PollAccountBal pollAccountBal = null;
+    ArrayList<Double> accountBalVals = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +34,20 @@ public class GrowthViewActivity extends AppCompatActivity {
         setContentView(R.layout.activity_growth_view);
         graphStopBtn = findViewById(R.id.graphStopBtn);
         goBack = findViewById(R.id.goBack);
+
+        growthActivityHandler = new Handler(){
+            @Override
+            public void handleMessage(Message msg){
+                super.handleMessage(msg);
+                //accountBalVals = (ArrayList<Double>) msg.getData().getSerializable("accountBalVals");
+                Bundle bundle = msg.getData();
+                Double time = bundle.getDouble("Time");
+                Double accountBal = bundle.getDouble("Gain");
+                bridge.addDataToWebView(Integer.toString(time.intValue()), Double.toString(accountBal));
+            }
+        };
+        timer.schedule(new PollAccountBal(growthActivityHandler), 0, 10000);
+        //pollAccountBal = new PollAccountBal(growthActivityHandler);
 
         goBack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -39,6 +58,12 @@ public class GrowthViewActivity extends AppCompatActivity {
             }
         });
 
+        graphStopBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                timer.purge();
+            }
+        });
         Intent intent = getIntent();
         Bundle args = intent.getBundleExtra("BUNDLE");
 

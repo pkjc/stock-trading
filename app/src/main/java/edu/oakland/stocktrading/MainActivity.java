@@ -2,6 +2,8 @@ package edu.oakland.stocktrading;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -38,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
     BadStrategy badStrategy = null;
     static List<Double> accountBalVals = new ArrayList<>();
     Timer timer = new Timer();
-
+    Handler mainActivityHandler = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,6 +49,18 @@ public class MainActivity extends AppCompatActivity {
         gameMsg = findViewById(R.id.gameMsg);
         startBtn = findViewById(R.id.startGame);
 
+        mainActivityHandler = new Handler(){
+          @Override
+          public void handleMessage(Message msg){
+              super.handleMessage(msg);
+              Bundle bundle = msg.getData();
+              Double time = bundle.getDouble("Time");
+              Double accountBal = bundle.getDouble("Gain");
+              accountBalVals.add(accountBal);
+              //accountBalVals.clear();
+             // accountBalVals = (List<Double>) msg.getData().getSerializable("accountBalVals");
+          }
+        };
         startBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -58,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
                 goodStrategy.start();
                 badStrategy = new BadStrategy();
                 badStrategy.start();
-                timer.schedule(new PollAccountBal(), 0, 10000);
+                timer.schedule(new PollAccountBal(mainActivityHandler), 0, 10000);
                 Toast.makeText(MainActivity.this, "Game Started!", Toast.LENGTH_LONG).show();
                 gameMsg.setText("Click on 'Show Growth' to see the graph");
             }
@@ -82,6 +96,8 @@ public class MainActivity extends AppCompatActivity {
         showGraph.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                //Stop polling before navigation
+                timer.purge();
                 Intent intent = new Intent(MainActivity.this, GrowthViewActivity.class);
                 Bundle args = new Bundle();
                 args.putSerializable("accountBalVals", (Serializable) accountBalVals);
@@ -89,18 +105,38 @@ public class MainActivity extends AppCompatActivity {
                 view.getContext().startActivity(intent);
             }
         });
+    }
 
+    @Override
+    public void onResume(){
+        super.onResume();
+        Intent intent = getIntent();
+        //Poll again
+        timer.schedule(new PollAccountBal(mainActivityHandler), 0, 10000);
     }
 }
 
 class PollAccountBal extends TimerTask {
     private static final String TAG = "PollAccountBal";
+    Handler activityHandler = null;
+
+    public PollAccountBal(Handler handler) {
+        this.activityHandler = handler;
+    }
 
     public void run() {
         Log.d(TAG, " <<<<< ACCOUNT BALANACE >>>>>> " + accountBal);
         accountBalVals.add(accountBal);
         time = time + 10;
+        Message msg =activityHandler.obtainMessage();
+        Bundle bundle = msg.getData();
+       // bundle.putSerializable("AccountValueList", (Serializable) accountBalVals);
+        bundle.putDouble("Time", time);
+        bundle.putDouble("Gain", accountBal);
+        msg.setData(bundle);
+        activityHandler.sendMessage(msg);
     }
+
 }
 
 class GoodStrategy extends Thread {
