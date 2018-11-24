@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static edu.oakland.stocktrading.GrowthViewActivity.time;
 import static edu.oakland.stocktrading.MainActivity.accountBal;
 import static edu.oakland.stocktrading.MainActivity.accountBalVals;
+import static edu.oakland.stocktrading.MainActivity.isGameStopped;
 
 // start button click starts 2 threads and go to next screen
 // good strategy thread and bad strategy thread
@@ -39,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
     static List<Double> accountBalVals = new ArrayList<>();
     Timer timer = new Timer();
     Handler mainActivityHandler = null;
+    static volatile boolean isGameStopped = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,20 +54,19 @@ public class MainActivity extends AppCompatActivity {
           public void handleMessage(Message msg){
               super.handleMessage(msg);
               Bundle bundle = msg.getData();
-              Double time = bundle.getDouble("Time");
-              Double accountBal = bundle.getDouble("Gain");
-              accountBalVals.add(accountBal);
-              //accountBalVals.clear();
-             // accountBalVals = (List<Double>) msg.getData().getSerializable("accountBalVals");
+              if(bundle.getString("GameOver") != null){
+                  gameMsg.setText("Game Over! Click on 'Show Growth' to see the graph");
+              }
           }
         };
         startBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 //Reset the account balance to 100
                 accountBalVals.clear();
                 accountBal = 100.0;
+                timer = new Timer();
+                isGameStopped = false;
 
                 goodStrategy = new GoodStrategy();
                 goodStrategy.start();
@@ -92,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 badStrategy = null;
                 timer.cancel();
+                isGameStopped = true;
             }
         });
 
@@ -105,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
                 Bundle args = new Bundle();
                 args.putSerializable("accountBalVals", (Serializable) accountBalVals);
                 intent.putExtra("BUNDLE", args);
+                intent.putExtra("GameStopped", isGameStopped);
                 view.getContext().startActivity(intent);
             }
         });
@@ -113,9 +116,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onResume(){
         super.onResume();
-        Intent intent = getIntent();
-        //Poll again
-        timer.schedule(new PollAccountBal(mainActivityHandler), 10000, 10000);
+        //Poll again if not stopped
+        if(!isGameStopped) {
+            timer.schedule(new PollAccountBal(mainActivityHandler), 10000, 10000);
+        }
     }
 }
 
@@ -128,19 +132,25 @@ class PollAccountBal extends TimerTask {
     }
 
     public void run() {
-        if(accountBal < 0) {
-            Toast.makeText(new MainActivity(), "Account Balance reached zero!", Toast.LENGTH_SHORT).show();
+        if(accountBal < 0 || isGameStopped) {
+            Message msg = activityHandler.obtainMessage();
+            Bundle bundle = msg.getData();
+            bundle.putString("GameOver", "GameOver");
+            msg.setData(bundle);
+            activityHandler.sendMessage(msg);
+            return;
         }
-        Log.d(TAG, " <<<<< ACCOUNT BALANACE >>>>>> " + accountBal);
-        accountBalVals.add(accountBal);
-        time = time + 10;
-        Message msg = activityHandler.obtainMessage();
-        Bundle bundle = msg.getData();
-       //bundle.putSerializable("AccountValueList", (Serializable) accountBalVals);
-        bundle.putDouble("Time", time);
-        bundle.putDouble("Gain", accountBal);
-        msg.setData(bundle);
-        activityHandler.sendMessage(msg);
+        if(!isGameStopped) {
+            Log.d(TAG, " <<<<< ACCOUNT BALANACE >>>>>> " + accountBal);
+            accountBalVals.add(accountBal);
+            time = time + 10;
+            Message msg = activityHandler.obtainMessage();
+            Bundle bundle = msg.getData();
+            bundle.putDouble("Time", time);
+            bundle.putDouble("Gain", accountBal);
+            msg.setData(bundle);
+            activityHandler.sendMessage(msg);
+        }
     }
 
 }
@@ -168,10 +178,6 @@ class GoodStrategy extends Thread {
             e.printStackTrace();
         }
     }
-
-    /*double roundOff(double value) {
-        return Math.round(value * 100) / 100;
-    }*/
 }
 
 class BadStrategy extends Thread {
@@ -197,8 +203,4 @@ class BadStrategy extends Thread {
             e.printStackTrace();
         }
     }
-
-    /*double roundOff(double value) {
-        return Math.round(value * 100) / 100;
-    }*/
 }

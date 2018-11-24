@@ -10,11 +10,13 @@ import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Timer;
 
 import static edu.oakland.stocktrading.MainActivity.accountBal;
+import static edu.oakland.stocktrading.MainActivity.isGameStopped;
 
 public class GrowthViewActivity extends AppCompatActivity {
     WebView webView = null;
@@ -39,15 +41,13 @@ public class GrowthViewActivity extends AppCompatActivity {
             @Override
             public void handleMessage(Message msg){
                 super.handleMessage(msg);
-                //accountBalVals = (ArrayList<Double>) msg.getData().getSerializable("accountBalVals");
                 Bundle bundle = msg.getData();
-                Double time = bundle.getDouble("Time");
-                Double accountBal = bundle.getDouble("Gain");
-                bridge.addDataToWebView(Integer.toString(time.intValue()), Double.toString(accountBal));
+                if(bundle.get("GameOver") == null) {
+                    Double accountBal = bundle.getDouble("Gain");
+                    bridge.addDataToWebView(Integer.toString(time), Double.toString(accountBal));
+                }
             }
         };
-        timer.schedule(new PollAccountBal(growthActivityHandler), 0, 10000);
-        //pollAccountBal = new PollAccountBal(growthActivityHandler);
 
         goBack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -61,13 +61,17 @@ public class GrowthViewActivity extends AppCompatActivity {
         graphStopBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                timer.purge();
+                timer.cancel();
+                isGameStopped = true;
+                Toast.makeText(GrowthViewActivity.this, "Game Over!", Toast.LENGTH_SHORT).show();
             }
         });
         Intent intent = getIntent();
         Bundle args = intent.getBundleExtra("BUNDLE");
-
         final ArrayList<Double> accountBalVals = (ArrayList<Double>) args.getSerializable("accountBalVals");
+        if(!isGameStopped) {
+            timer.schedule(new PollAccountBal(growthActivityHandler), 0, 10000);
+        }
 
         webView = findViewById(R.id. webView);
         webView.getSettings().setJavaScriptEnabled(true);
@@ -82,25 +86,15 @@ public class GrowthViewActivity extends AppCompatActivity {
                 addValuesToGraph(accountBalVals);
             }
         });
-
         webView.loadUrl("file:///android_asset/index.html");
     }
 
     private void addValuesToGraph(ArrayList<Double> accountBalVals) {
         int time = 10;
         for(Double val : accountBalVals) {
-            Log.d(TAG, "onCreate: accountBalVal >>>>>>>>>> " + accountBal);
-            bridge.addDataToWebView(Integer.toString(time), Double.toString(accountBal));
+            Log.d(TAG, "onCreate: accountBalVal >>>>>>>>>> " + val);
+            bridge.addDataToWebView(Integer.toString(time), Double.toString(val));
             time = time + 10;
         }
     }
 }
-
-//class PollAccountBal extends TimerTask {
-//    private static final String TAG = "PollAccountBal";
-//    public void run() {
-//        Log.d(TAG,  " <<<<< ACCOUNT BALANACE >>>>>> " + accountBal);
-//
-//        time = time + 10;
-//    }
-//}
